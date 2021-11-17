@@ -16,12 +16,6 @@ clean:
 	@echo "=== $(INTEGRATION) === [ clean ]: cleaning workspace..."
 	@rm -rfv bin coverage.xml
 
-validate:
-	@printf "=== $(INTEGRATION) === [ validate ]: running golangci-lint & semgrep... "
-	@go run  $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
-	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
-	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
-
 bin/$(BINARY_NAME):
 	@echo "=== $(INTEGRATION) === [ compile ]: building $(BINARY_NAME)..."
 	@go build -v -o bin/$(BINARY_NAME) $(GO_FILES)
@@ -31,12 +25,6 @@ compile: bin/$(BINARY_NAME)
 test:
 	@echo "=== $(INTEGRATION) === [ test ]: running unit tests..."
 	@go test -race ./... -count=1
-
-integration-test:
-	@echo "=== $(INTEGRATION) === [ test ]: running integration tests..."
-	@docker-compose -f tests/integration/docker-compose.yml up -d --build
-	@go test -v -tags=integration ./tests/integration/. || (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
-	@docker-compose -f tests/integration/docker-compose.yml down
 
 install: compile
 	@echo "=== $(INTEGRATION) === [ install ]: installing bin/$(BINARY_NAME)..."
